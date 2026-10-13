@@ -14,7 +14,7 @@ const authRouter = Router();
 // Sign UP
 authRouter.post("/signup", zodValidate(signUpZodSchema), signUp);
 // Sign IN
-authRouter.get("/signin", zodValidate(signInZodSchema), signIn);
+authRouter.post("/signin", zodValidate(signInZodSchema), signIn);
 // Forgot Password
 authRouter.post("/forgot-password", forgotPassword);
 // Verify OTP

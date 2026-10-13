@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { apiResHelper, HTTP_STATUS } from "../lib/constants.js";
 import { hashPassword, validatePassword } from "../lib/securePassword.js";
 import db from "../db/index.js";
-import { userDBSchema } from "../db/schema.js";
+import { users } from "../db/schema.js";
 import { createJwtToken, verifyJwtToken } from "../lib/jwtToken.js";
 import { JwtPayload } from "jsonwebtoken";
 import { eq } from "drizzle-orm";
@@ -20,7 +20,6 @@ export const signUp = async (
 
     // Create secure password
     const hashedPassword = await hashPassword(password);
-
     // Check if user already exists in the database
     const checkUserExists = await db.query.users.findFirst({
       where: {
@@ -36,15 +35,14 @@ export const signUp = async (
 
     // Create a new user in the database
     await db
-      .insert(userDBSchema)
+      .insert(users)
       .values({
         name,
         email,
         gender,
         password: hashedPassword.password,
         salt: hashedPassword.salt,
-      })
-      .returning();
+      });
     return apiResHelper(res, HTTP_STATUS.CREATED, {
       success: true,
       message: "User signed up successfully",
@@ -61,7 +59,7 @@ export const signIn = async (
   next: NextFunction,
 ) => {
   try {
-    const { email, gender } = req.body;
+    const { email, password } = req.body;
 
     // Check if user already exists in the database
     const checkUserExists = await db.query.users.findFirst({
@@ -78,7 +76,7 @@ export const signIn = async (
 
     // Validate password
     const isPasswordValid = await validatePassword(
-      req.body.password,
+      password,
       checkUserExists.password,
       checkUserExists.salt,
     );
@@ -281,12 +279,12 @@ export const resetPassword = async (
     const hashedPassword = await hashPassword(newPassword);
 
     await db
-      .update(userDBSchema)
+      .update(users)
       .set({
         password: hashedPassword.password,
         salt: hashedPassword.salt,
       })
-      .where(eq(userDBSchema.id, user.id));
+      .where(eq(users.id, user.id));
 
     return apiResHelper(res, HTTP_STATUS.OK, {
       success: true,

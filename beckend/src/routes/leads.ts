@@ -7,12 +7,20 @@ import {
   leadUpdate,
   leadDelete,
 } from "../controllers/leads.js";
+import authenticate from "../middlewares/authenticate.js";
+import { zodValidate } from "../lib/zodValidator.js";
+import { leadZodSchema } from "../lib/zodSchema.js";
 
 leadsRouter
-  .get("/notes", leadsGet)
-  .get("/notes/:id", leadGetById)
-  .post("/notes", leadCreate)
-  .patch("/notes/:id", leadUpdate)
-  .delete("/notes/:id", leadDelete);
+  .get("/", authenticate, leadsGet)
+  .get("/:id", authenticate, leadGetById)
+  .post("/", authenticate, zodValidate(leadZodSchema), leadCreate)
+  .patch(
+    "/:id",
+    authenticate,
+    zodValidate(leadZodSchema.partial()),
+    leadUpdate,
+  )
+  .delete("/:id", authenticate, leadDelete);
 
 export default leadsRouter;

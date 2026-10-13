@@ -4,11 +4,8 @@ import { apiResHelper, HTTP_STATUS } from "./constants.js";
 
 export const zodValidate = (schema: z.ZodType) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const result = schema.safeParse({
-      body: req.body,
-      params: req.params,
-      query: req.query,
-    });
+    console.log(req.body, ":Payload");
+    const result = schema.safeParse(req.body);
 
     if (!result.success) {
       return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {

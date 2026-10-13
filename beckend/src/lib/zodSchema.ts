@@ -15,3 +15,19 @@ export const signUpZodSchema = z.object({
     message: "Invalid gender",
   }),
 });
+
+// Lead
+export const leadZodSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.email("Invalid email address"),
+  phone: z.string().optional().or(z.literal("")),
+  status: z.enum(["new", "contacted", "qualified", "lost"]),
+});
+export type leadZodSchemaType = z.infer<typeof leadZodSchema>;
+
+// Lead Note
+export const leadNoteZodSchema = z.object({
+  leadId: z.string().min(1, "Lead id is required"),
+  content: z.string().min(1, "Content is required"),
+});
+export type leadNoteZodSchemaType = z.infer<typeof leadNoteZodSchema>;
