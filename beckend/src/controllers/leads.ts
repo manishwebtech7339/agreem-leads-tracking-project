@@ -17,14 +17,15 @@ export const leadsGet = async (
       query = "",
     } = req.query as { page: string; perPage: string; query: string };
     const limit = Number(perPage ?? 10);
-    const offset = Number(page) * limit;
+    const offset = (Number(page) - 1) * limit;
 
     // --
-    const getLeads = await db.query.leads.findMany({
-      where: {
-        name: `%${query}%`,
-        email: `%${query}%`,
-      },
+    const data = await db.query.leads.findMany({
+      where: query
+        ? {
+            name: `%${query}%`,
+          }
+        : {},
       limit,
       offset,
     });
@@ -36,7 +37,7 @@ export const leadsGet = async (
     );
 
     return apiResHelper(res, HTTP_STATUS.OK, {
-      data: getLeads,
+      data: data,
       message: "Leads found successfully",
       page: Number(page ?? "1"),
       perPage: Number(perPage ?? "1"),
@@ -113,7 +114,7 @@ export const leadUpdate = async (
 ) => {
   try {
     const { id: leadId } = req.params;
-    const { name, email, status, phone } = req.body as leadZodSchemaType;
+    const { name, status, phone } = req.body as leadZodSchemaType;
 
     // --
     const validateLead = await db.query.leads.findFirst({
@@ -132,7 +133,6 @@ export const leadUpdate = async (
       .update(leads)
       .set({
         name,
-        email,
         status,
         phone,
       })
