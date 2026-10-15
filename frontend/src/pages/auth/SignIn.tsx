@@ -17,10 +17,12 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { signInFormSchema, type SignInFormSchemaType } from "@/lib/formSchema";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const SignIn = () => {
+  const navigate = useNavigate();
+
   // Form Config
   const form = useForm<SignInFormSchemaType>({
     resolver: zodResolver(signInFormSchema),
@@ -37,7 +39,7 @@ const SignIn = () => {
       setTimeout(() => {
         resolve("");
       }, 2000);
-    });
+    }).then(() => navigate("/dashboard/home"));
   };
 
   // Handle Test account fill up
