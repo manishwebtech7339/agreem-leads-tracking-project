@@ -11,7 +11,10 @@ export const LEAD_STATUS_OPTIONS = [
 // Sign In Schema
 export const signInFormSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(20, "Password must be at most 20 characters"),
 });
 export type SignInFormSchemaType = z.infer<typeof signInFormSchema>;
 
@@ -54,8 +57,14 @@ export type VerifyOtpFormSchemaType = z.infer<typeof verifyOtpFormSchema>;
 export const resetPasswordFormSchema = z
   .object({
     resetToken: z.string().min(1, "Reset token is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Confirm password is required"),
+    newPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(20, "Password must be at most 20 characters"),
+    confirmPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(20, "Password must be at most 20 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
