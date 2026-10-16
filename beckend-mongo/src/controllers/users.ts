@@ -89,11 +89,27 @@ export const userDelete = async (
 ) => {
   try {
     const { id } = req.params;
+    const user = req.user as { id?: string } | undefined;
+    const userId = user?.id;
 
-    if (!mongoose.isValidObjectId(id)) {
+    if (!id || !mongoose.isValidObjectId(id)) {
       return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+        success: false,
+        message: "Current user session not found",
+      });
+    }
+
+    if (userId.toString() === id.toString()) {
+      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+        success: false,
+        message: "Can't delete current session account",
       });
     }
 

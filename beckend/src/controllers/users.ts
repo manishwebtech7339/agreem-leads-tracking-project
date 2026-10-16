@@ -101,6 +101,15 @@ export const userDelete = async (
 ) => {
   try {
     const { id } = req.params;
+    const user = req.user as { id?: number | string } | undefined;
+    const userId = user?.id;
+
+    if (Number(userId) === Number(id)) {
+      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+        success: false,
+        message: "Can't delete current session account",
+      });
+    }
 
     const validateUser = await db.query.users.findFirst({
       where: {
