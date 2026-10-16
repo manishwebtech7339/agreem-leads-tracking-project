@@ -9,7 +9,9 @@ import {
 import authenticate from "../middlewares/authenticate.js";
 import { zodValidate } from "../lib/zodValidator.js";
 import { leadNoteZodSchema } from "../lib/zodSchema.js";
+
 const notesRouter = express.Router();
+
 notesRouter
   .get("/", authenticate, notesGet)
   .get("/:id", authenticate, noteGetById)
@@ -21,4 +23,5 @@ notesRouter
     noteUpdate,
   )
   .delete("/:id", authenticate, noteDelete);
+
 export default notesRouter;

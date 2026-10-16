@@ -77,3 +77,27 @@ export type CreateLeadPayload = {
 
 export type UpdateLeadPayload = Partial<CreateLeadPayload>;
 
+export type NoteData = {
+  id: number;
+  content: string;
+  leadId: number;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Note = NoteData;
+
+export type NotesApiResponse = ApiResponse<NoteData[]> & {
+  total?: number;
+};
+
+export type CreateNotePayload = {
+  leadId: number | string;
+  content: string;
+};
+
+export type UpdateNotePayload = {
+  content: string;
+};
+

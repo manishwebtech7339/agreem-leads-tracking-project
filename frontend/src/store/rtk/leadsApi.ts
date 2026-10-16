@@ -17,23 +17,17 @@ export const leadsApi = baseApi.injectEndpoints({
         params: {
           page: params?.page ?? 1,
           perPage: params?.perPage ?? 10,
-          ...(params?.query ? { query: params.query } : {}),
+          query: params?.query ?? "",
         },
       }),
-      providesTags: (result) =>
-        result?.data
-          ? [
-              ...result.data.map(({ id }) => ({ type: "Leads" as const, id })),
-              { type: "Leads", id: "LIST" },
-            ]
-          : [{ type: "Leads", id: "LIST" }],
+      providesTags: ["Leads"],
     }),
     getLeadById: builder.query<ApiResponse<LeadData>, number | string>({
       query: (id) => ({
         url: `/leads/${id}`,
         method: "GET",
       }),
-      providesTags: (_result, _error, id) => [{ type: "Leads", id }],
+      providesTags: ["Leads"],
     }),
     createLead: builder.mutation<ApiResponse<LeadData>, CreateLeadPayload>({
       query: (body) => ({
@@ -41,7 +35,7 @@ export const leadsApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Leads", id: "LIST" }],
+      invalidatesTags: ["Leads"],
     }),
     updateLead: builder.mutation<
       ApiResponse<LeadData>,
@@ -52,20 +46,16 @@ export const leadsApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: "Leads", id: "LIST" },
-        { type: "Leads", id },
-      ],
+      invalidatesTags: ["Leads"],
     }),
     deleteLead: builder.mutation<ApiResponse, number | string>({
       query: (id) => ({
         url: `/leads/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: "Leads", id: "LIST" }],
+      invalidatesTags: ["Leads"],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,7 +40,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import useDebounce from "@/hooks/useDebounce";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, Edit, FileText, Plus, Trash2 } from "lucide-react";
 import {
   useGetLeadsQuery,
   useCreateLeadMutation,
@@ -54,15 +54,19 @@ import {
 } from "@/lib/formSchema";
 import type { LeadData } from "@/lib/types";
 import { cn } from "cn";
+import LeadNotesSubTable from "./LeadNotesSubTable";
+import { format } from "date-fns";
 
 const Leads = () => {
   const [pageIndex, setPageIndex] = useState(1);
-  const pageSize = 10;
   const { query, handleSearch } = useDebounce();
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
 
-  // Dialog state for Create / Edit
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // Expanded lead rows state (for notes sub-table)
+  const [expandedLeadIds, setExpandedLeadIds] = useState<number[]>([]);
+
+  // Lead Dialog state for Create / Edit
+  const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadData | null>(null);
 
   const handleSearchChange = (value: string) => {
@@ -70,22 +74,28 @@ const Leads = () => {
     setPageIndex(1);
   };
 
-  // RTK Query hooks
+  // Toggle row expansion for notes sub-table
+  const toggleExpandLead = (id: number) => {
+    setExpandedLeadIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  // RTK Query
   const { data, isLoading, isFetching } = useGetLeadsQuery({
     page: pageIndex,
-    perPage: pageSize,
+    perPage: 10,
     query,
   });
-
-  const [createLead, { isLoading: isCreating }] = useCreateLeadMutation();
-  const [updateLead, { isLoading: isUpdating }] = useUpdateLeadMutation();
-  const [deleteLead, { isLoading: isDeleting }] = useDeleteLeadMutation();
-
   const leadsList = data?.data ?? [];
   const pageCount = data?.totalPages ?? 1;
 
-  // React Hook Form
-  const form = useForm<LeadFormSchemaType>({
+  const [createLead, { isLoading: isCreatingLead }] = useCreateLeadMutation();
+  const [updateLead, { isLoading: isUpdatingLead }] = useUpdateLeadMutation();
+  const [deleteLead, { isLoading: isDeletingLead }] = useDeleteLeadMutation();
+
+  // Form
+  const leadForm = useForm<LeadFormSchemaType>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
       name: "",
@@ -95,35 +105,33 @@ const Leads = () => {
     },
   });
 
-  const handleOpenCreate = () => {
+  // --
+  const handleOpenCreateLead = () => {
     setSelectedLead(null);
-    form.reset({
+    leadForm.reset({
       name: "",
       email: "",
       phone: "",
       status: "new",
     });
-    setIsDialogOpen(true);
+    setIsLeadDialogOpen(true);
   };
 
-  const handleOpenEdit = (lead: LeadData) => {
+  // --
+  const handleOpenEditLead = (lead: LeadData) => {
     setSelectedLead(lead);
-    const validStatus = (LEAD_STATUS_OPTIONS as readonly string[]).includes(
-      lead.status,
-    )
-      ? (lead.status as LeadFormSchemaType["status"])
-      : "new";
 
-    form.reset({
+    leadForm.reset({
       name: lead.name,
       email: lead.email,
       phone: lead.phone ?? "",
-      status: validStatus,
+      status: (lead.status as "new") ?? "new",
     });
-    setIsDialogOpen(true);
+    setIsLeadDialogOpen(true);
   };
 
-  const onSubmit = async (formData: LeadFormSchemaType) => {
+  // --
+  const onLeadSubmit = async (formData: LeadFormSchemaType) => {
     try {
       if (selectedLead) {
         const res = await updateLead({
@@ -145,14 +153,15 @@ const Leads = () => {
         }).unwrap();
         toast.success(res.message || "Lead created successfully");
       }
-      setIsDialogOpen(false);
-      form.reset();
+      setIsLeadDialogOpen(false);
+      leadForm.reset();
     } catch (err: unknown) {
       const error = err as { data?: { message?: string } };
       toast.error(error?.data?.message || "Operation failed");
     }
   };
 
+  // --
   const handleDeleteLead = async (id: number) => {
     try {
       const res = await deleteLead(id).unwrap();
@@ -164,41 +173,17 @@ const Leads = () => {
     }
   };
 
-  const formatDate = (dateString?: string | number | Date) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "new":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
-      case "contacted":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-      case "qualified":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-      case "lost":
-        return "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-medium">Leads Management</h1>
           <p className="text-muted-foreground text-sm">
-            View, organize, and manage all your leads. Track their status with
-            notes.
+            View, organize, and manage all your leads. Expand any lead to review
+            and manage its notes.
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="w-fit">
+        <Button onClick={handleOpenCreateLead} className="w-fit">
           <Plus className="size-4" />
           <span>Add Lead</span>
         </Button>
@@ -214,19 +199,20 @@ const Leads = () => {
           <Table className="w-full">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px] px-2"></TableHead>
                 <TableHead className="w-[150px]">Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created At</TableHead>
-                <TableHead className="w-[120px]">Actions</TableHead>
+                <TableHead className="w-[140px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading || isFetching ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-6 text-muted-foreground"
                   >
                     Loading leads...
@@ -235,85 +221,139 @@ const Leads = () => {
               ) : leadsList.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-6 text-muted-foreground"
                   >
                     No leads found
                   </TableCell>
                 </TableRow>
               ) : (
-                leadsList.map((lead) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="font-medium">{lead.name}</TableCell>
-                    <TableCell>{lead.email}</TableCell>
-                    <TableCell>{lead.phone || "-"}</TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                          getStatusBadgeClass(lead.status),
-                        )}
+                leadsList.map((lead) => {
+                  const isExpanded = expandedLeadIds.includes(lead.id);
+                  return (
+                    <Fragment key={lead.id}>
+                      <TableRow
+                        className={cn(isExpanded && "bg-muted/15 border-b-0")}
                       >
-                        {lead.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatDate(lead.createdAt)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size={"icon"}
-                          variant={"outline"}
-                          onClick={() => handleOpenEdit(lead)}
-                        >
-                          <Edit />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Popover
-                          open={openPopoverId === lead.id}
-                          onOpenChange={(open) =>
-                            setOpenPopoverId(open ? lead.id : null)
-                          }
-                        >
-                          <PopoverTrigger asChild>
+                        <TableCell className="w-[40px] px-2 text-center">
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            onClick={() => toggleExpandLead(lead.id)}
+                            title={
+                              isExpanded ? "Collapse notes" : "Expand notes"
+                            }
+                          >
+                            <ChevronRight
+                              className={cn(
+                                "size-4 transition-transform duration-200",
+                                isExpanded && "rotate-90",
+                              )}
+                            />
+                            <span className="sr-only">Toggle notes</span>
+                          </Button>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {lead.name}
+                        </TableCell>
+                        <TableCell>{lead.email}</TableCell>
+                        <TableCell>{lead.phone || "-"}</TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize",
+                            )}
+                          >
+                            {lead.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(lead.createdAt), "dd-MM-yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
                             <Button
-                              size={"icon"}
-                              variant={"destructive"}
-                              disabled={isDeleting}
+                              size={"icon-sm"}
+                              variant={isExpanded ? "secondary" : "outline"}
+                              onClick={() => toggleExpandLead(lead.id)}
+                              title={isExpanded ? "Hide Notes" : "View Notes"}
                             >
-                              <Trash2 />
-                              <span className="sr-only">Delete</span>
+                              <FileText className="size-4" />
+                              <span className="sr-only">Notes</span>
                             </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-62">
-                            <p className="mb-2 text-sm">
-                              Are you sure you want to delete this lead?
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                              <Button
-                                size={"sm"}
-                                variant={"outline"}
-                                onClick={() => setOpenPopoverId(null)}
-                                disabled={isDeleting}
-                              >
-                                No
-                              </Button>
-                              <Button
-                                size={"sm"}
-                                variant={"destructive"}
-                                onClick={() => handleDeleteLead(lead.id)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting && openPopoverId === lead.id
-                                  ? "Deleting..."
-                                  : "Yes"}
-                              </Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                            <Button
+                              size={"icon-sm"}
+                              variant={"outline"}
+                              onClick={() => handleOpenEditLead(lead)}
+                              title="Edit lead"
+                            >
+                              <Edit className="size-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <Popover
+                              open={openPopoverId === lead.id}
+                              onOpenChange={(open) =>
+                                setOpenPopoverId(open ? lead.id : null)
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size={"icon-sm"}
+                                  variant={"destructive"}
+                                  disabled={isDeletingLead}
+                                  title="Delete lead"
+                                >
+                                  <Trash2 className="size-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-62">
+                                <p className="mb-2 text-sm">
+                                  Are you sure you want to delete this lead?
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    size={"sm"}
+                                    variant={"outline"}
+                                    onClick={() => setOpenPopoverId(null)}
+                                    disabled={isDeletingLead}
+                                  >
+                                    No
+                                  </Button>
+                                  <Button
+                                    size={"sm"}
+                                    variant={"destructive"}
+                                    onClick={() => handleDeleteLead(lead.id)}
+                                    disabled={isDeletingLead}
+                                  >
+                                    {isDeletingLead && openPopoverId === lead.id
+                                      ? "Deleting..."
+                                      : "Yes"}
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Sub-table row for Notes */}
+                      {isExpanded && (
+                        <TableRow
+                          key={`${lead.id}-notes-row`}
+                          className="hover:bg-transparent"
+                        >
+                          <TableCell
+                            colSpan={7}
+                            className="bg-muted/20 px-6 py-3"
+                          >
+                            <LeadNotesSubTable lead={lead} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -333,8 +373,8 @@ const Leads = () => {
         </div>
       </div>
 
-      {/* Dialog for Create and Edit */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Dialog for Lead Create and Edit */}
+      <Dialog open={isLeadDialogOpen} onOpenChange={setIsLeadDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -347,7 +387,7 @@ const Leads = () => {
             </DialogDescription>
           </DialogHeader>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={leadForm.handleSubmit(onLeadSubmit)}
             className="space-y-4"
           >
             <FieldGroup>
@@ -355,7 +395,7 @@ const Leads = () => {
               <Field>
                 <Controller
                   name="name"
-                  control={form.control}
+                  control={leadForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="lead-name">Name</FieldLabel>
@@ -378,7 +418,7 @@ const Leads = () => {
               <Field>
                 <Controller
                   name="email"
-                  control={form.control}
+                  control={leadForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="lead-email">Email</FieldLabel>
@@ -402,7 +442,7 @@ const Leads = () => {
               <Field>
                 <Controller
                   name="phone"
-                  control={form.control}
+                  control={leadForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="lead-phone">Phone</FieldLabel>
@@ -426,7 +466,7 @@ const Leads = () => {
               <Field>
                 <Controller
                   name="status"
-                  control={form.control}
+                  control={leadForm.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="lead-status">Status</FieldLabel>
@@ -465,18 +505,21 @@ const Leads = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => setIsLeadDialogOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isCreating || isUpdating}>
+                <Button
+                  type="submit"
+                  disabled={isCreatingLead || isUpdatingLead}
+                >
                   {selectedLead
-                    ? isUpdating
+                    ? isUpdatingLead
                       ? "Updating..."
                       : "Update Lead"
-                    : isCreating
-                    ? "Creating..."
-                    : "Create Lead"}
+                    : isCreatingLead
+                      ? "Creating..."
+                      : "Create Lead"}
                 </Button>
               </div>
             </FieldGroup>
