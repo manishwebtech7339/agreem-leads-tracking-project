@@ -10,7 +10,9 @@ const Home = () => {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-medium">Welcome to Leads Tracking</h1>
-        <p>Manage your leads, notes and users from one place.</p>
+        <p className="text-muted-foreground text-sm">
+          Manage your leads, notes and users from one place.
+        </p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <Card>

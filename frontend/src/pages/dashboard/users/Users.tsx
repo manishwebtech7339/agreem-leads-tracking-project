@@ -57,7 +57,7 @@ const Users = () => {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-medium">User Management</h1>
-        <p>Manage users, review details.</p>
+        <p className="text-muted-foreground text-sm">Manage users, review details.</p>
       </div>
       <div className="space-y-4">
         <SearchForm

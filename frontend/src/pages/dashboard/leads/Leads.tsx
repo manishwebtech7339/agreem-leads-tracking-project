@@ -199,13 +199,13 @@ const Leads = () => {
           <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px] px-2"></TableHead>
-                <TableHead className="w-[150px]">Name</TableHead>
+                <TableHead className="w-10 px-2"></TableHead>
+                <TableHead className="w-40">Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created At</TableHead>
-                <TableHead className="w-[140px]">Actions</TableHead>
+                <TableHead className="w-40">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,7 +235,7 @@ const Leads = () => {
                       <TableRow
                         className={cn(isExpanded && "bg-muted/15 border-b-0")}
                       >
-                        <TableCell className="w-[40px] px-2 text-center">
+                        <TableCell className="w-10 px-2 text-center">
                           <Button
                             size="icon-xs"
                             variant="ghost"
