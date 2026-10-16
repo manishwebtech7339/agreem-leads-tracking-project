@@ -1,15 +1,10 @@
 import baseApi from "@/store/rtk";
-import type {
-  ApiResponse,
-  NoteData,
-  NotesApiResponse,
-  CreateNotePayload,
-  UpdateNotePayload,
-} from "@/lib/types";
+import type { ApiResponse, NoteData } from "@/lib/types";
+import type { NoteFormSchemaType } from "@/lib/formSchema";
 
 export const notesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getNotesByLeadId: builder.query<NotesApiResponse, number | string>({
+    getNotesByLeadId: builder.query<ApiResponse<NoteData[]>, number | string>({
       query: (leadId) => ({
         url: "/notes",
         method: "GET",
@@ -24,7 +19,7 @@ export const notesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Notes"],
     }),
-    createNote: builder.mutation<ApiResponse<NoteData>, CreateNotePayload>({
+    createNote: builder.mutation<ApiResponse<NoteData>, NoteFormSchemaType>({
       query: (body) => ({
         url: "/notes",
         method: "POST",
@@ -34,7 +29,7 @@ export const notesApi = baseApi.injectEndpoints({
     }),
     updateNote: builder.mutation<
       ApiResponse<NoteData>,
-      { id: number | string; data: UpdateNotePayload }
+      { id: number | string; data: Partial<NoteFormSchemaType> }
     >({
       query: ({ id, data }) => ({
         url: `/notes/${id}`,

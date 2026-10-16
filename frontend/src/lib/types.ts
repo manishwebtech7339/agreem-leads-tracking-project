@@ -47,8 +47,6 @@ export type UserData = {
   updatedAt: string;
 };
 
-export type User = UserData;
-
 export type LeadStatus = "new" | "contacted" | "qualified" | "lost";
 
 export type LeadData = {
@@ -62,21 +60,6 @@ export type LeadData = {
   updatedAt: string;
 };
 
-export type Lead = LeadData;
-
-export type GetLeadsParams = ApiFilterParams;
-
-export type LeadsApiResponse = PaginatedApiResponse<LeadData[]>;
-
-export type CreateLeadPayload = {
-  name: string;
-  email: string;
-  phone?: string;
-  status?: LeadStatus | string;
-};
-
-export type UpdateLeadPayload = Partial<CreateLeadPayload>;
-
 export type NoteData = {
   id: number;
   content: string;
@@ -86,18 +69,9 @@ export type NoteData = {
   updatedAt: string;
 };
 
-export type Note = NoteData;
-
-export type NotesApiResponse = ApiResponse<NoteData[]> & {
-  total?: number;
+export type DashboardStats = {
+  totalLeads: number;
+  newLeads: number;
+  convertedLeads: number;
+  totalUsers: number;
 };
-
-export type CreateNotePayload = {
-  leadId: number | string;
-  content: string;
-};
-
-export type UpdateNotePayload = {
-  content: string;
-};
-

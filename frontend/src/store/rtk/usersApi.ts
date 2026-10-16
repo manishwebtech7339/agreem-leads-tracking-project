@@ -35,7 +35,7 @@ export const usersApi = baseApi.injectEndpoints({
         url: `/users/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: ["Users", "Dashboard"],
     }),
   }),
 });
