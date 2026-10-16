@@ -88,6 +88,16 @@ export const leadCreate = async (
     const { name, email, status, phone } = req.body as leadZodSchemaType;
     const { id: userId } = req.user as { id: string };
 
+    // --
+    const validateLead = await Lead.findOne({ email });
+    if (validateLead) {
+      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+        success: false,
+        message: "Lead already created for this email",
+      });
+    }
+
+    // --
     await Lead.create({
       name,
       email,
@@ -112,7 +122,8 @@ export const leadUpdate = async (
 ) => {
   try {
     const { id: leadId } = req.params;
-    const { name, email, status, phone } = req.body as Partial<leadZodSchemaType>;
+    const { name, email, status, phone } =
+      req.body as Partial<leadZodSchemaType>;
 
     if (!mongoose.isValidObjectId(leadId)) {
       return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {

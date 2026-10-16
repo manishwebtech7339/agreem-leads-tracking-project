@@ -18,7 +18,8 @@ export type ApiFilterParams = {
 };
 
 export type AuthUserData = {
-  id: number;
+  id: number | string;
+  _id?: string;
   name: string;
   email: string;
   gender: string;
@@ -39,7 +40,8 @@ export type VerifyOtpData = {
 };
 
 export type UserData = {
-  id: number;
+  id: number | string;
+  _id?: string;
   name: string;
   email: string;
   gender: string;
@@ -50,21 +52,23 @@ export type UserData = {
 export type LeadStatus = "new" | "contacted" | "qualified" | "lost";
 
 export type LeadData = {
-  id: number;
+  id: number | string;
+  _id?: string;
   name: string;
   email: string;
   phone?: string | null;
   status: LeadStatus | string;
-  userId: number;
+  userId: number | string;
   createdAt: string;
   updatedAt: string;
 };
 
 export type NoteData = {
-  id: number;
+  id: number | string;
+  _id?: string;
   content: string;
-  leadId: number;
-  userId: number;
+  leadId: number | string;
+  userId: number | string;
   createdAt: string;
   updatedAt: string;
 };

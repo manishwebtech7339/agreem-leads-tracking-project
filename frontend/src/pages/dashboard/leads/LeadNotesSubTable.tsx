@@ -46,14 +46,15 @@ interface LeadNotesSubTableProps {
 }
 
 const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
-  const { data, isLoading } = useGetNotesByLeadIdQuery(lead.id);
+  const leadId = (lead.id ?? lead._id) as string | number;
+  const { data, isLoading } = useGetNotesByLeadIdQuery(leadId ?? "");
   const notesList = data?.data ?? [];
 
   const [createNote, { isLoading: isCreatingNote }] = useCreateNoteMutation();
   const [updateNote, { isLoading: isUpdatingNote }] = useUpdateNoteMutation();
   const [deleteNote, { isLoading: isDeletingNote }] = useDeleteNoteMutation();
 
-  const [deletePopoverId, setDeletePopoverId] = useState<number | null>(null);
+  const [deletePopoverId, setDeletePopoverId] = useState<string | number | null>(null);
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<NoteData | null>(null);
 
@@ -61,7 +62,7 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
   const noteForm = useForm<NoteFormSchemaType>({
     resolver: zodResolver(noteFormSchema),
     defaultValues: {
-      leadId: String(lead.id),
+      leadId: String(leadId ?? ""),
       content: "",
     },
   });
@@ -70,7 +71,7 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
   const handleOpenAddNote = () => {
     setSelectedNote(null);
     noteForm.reset({
-      leadId: String(lead.id),
+      leadId: String(leadId ?? ""),
       content: "",
     });
     setIsNoteDialogOpen(true);
@@ -80,7 +81,7 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
   const handleOpenEditNote = (note: NoteData) => {
     setSelectedNote(note);
     noteForm.reset({
-      leadId: String(note.leadId),
+      leadId: String(note.leadId ?? leadId ?? ""),
       content: note.content,
     });
     setIsNoteDialogOpen(true);
@@ -89,9 +90,10 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
   // --
   const onNoteSubmit = async (formData: NoteFormSchemaType) => {
     try {
-      if (selectedNote) {
+      const targetId = selectedNote?.id ?? selectedNote?._id;
+      if (targetId) {
         const res = await updateNote({
-          id: selectedNote.id,
+          id: targetId,
           data: {
             content: formData.content,
           },
@@ -113,7 +115,7 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
   };
 
   // --
-  const handleDeleteNote = async (id: number) => {
+  const handleDeleteNote = async (id: string | number) => {
     try {
       const res = await deleteNote(id).unwrap();
       toast.success(res.message || "Note deleted successfully");
@@ -167,73 +169,80 @@ const LeadNotesSubTable = ({ lead }: LeadNotesSubTableProps) => {
                 </TableCell>
               </TableRow>
             ) : (
-              notesList.map((note) => (
-                <TableRow key={note.id}>
-                  <TableCell className="text-xs font-normal whitespace-pre-wrap">
-                    {note.content}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(note.createdAt), "dd-MM-yyyy hh:mm a")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        size="icon-xs"
-                        variant="ghost"
-                        onClick={() => handleOpenEditNote(note)}
-                        title="Edit note"
-                      >
-                        <Edit className="size-3" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Popover
-                        open={deletePopoverId === note.id}
-                        onOpenChange={(open) =>
-                          setDeletePopoverId(open ? note.id : null)
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            disabled={isDeletingNote}
-                            title="Delete note"
-                          >
-                            <Trash2 className="size-3" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-60">
-                          <p className="mb-2 text-xs">
-                            Are you sure you want to delete this note?
-                          </p>
-                          <div className="grid grid-cols-2 gap-2">
+              notesList.map((note, index) => {
+                const noteId = (note.id ?? note._id) as string | number;
+                return (
+                  <TableRow key={noteId || index}>
+                    <TableCell className="text-xs font-normal whitespace-pre-wrap">
+                      {note.content}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {note.createdAt
+                        ? format(new Date(note.createdAt), "dd-MM-yyyy hh:mm a")
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          onClick={() => handleOpenEditNote(note)}
+                          title="Edit note"
+                        >
+                          <Edit className="size-3" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Popover
+                          open={Boolean(noteId && deletePopoverId === noteId)}
+                          onOpenChange={(open) =>
+                            setDeletePopoverId(open && noteId ? noteId : null)
+                          }
+                        >
+                          <PopoverTrigger asChild>
                             <Button
-                              size="xs"
-                              variant="outline"
-                              onClick={() => setDeletePopoverId(null)}
+                              size="icon-xs"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
                               disabled={isDeletingNote}
+                              title="Delete note"
                             >
-                              No
+                              <Trash2 className="size-3" />
+                              <span className="sr-only">Delete</span>
                             </Button>
-                            <Button
-                              size="xs"
-                              variant="destructive"
-                              onClick={() => handleDeleteNote(note.id)}
-                              disabled={isDeletingNote}
-                            >
-                              {isDeletingNote && deletePopoverId === note.id
-                                ? "Deleting..."
-                                : "Yes"}
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                          </PopoverTrigger>
+                          <PopoverContent className="w-60">
+                            <p className="mb-2 text-xs">
+                              Are you sure you want to delete this note?
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => setDeletePopoverId(null)}
+                                disabled={isDeletingNote}
+                              >
+                                No
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="destructive"
+                                onClick={() =>
+                                  noteId && handleDeleteNote(noteId)
+                                }
+                                disabled={isDeletingNote}
+                              >
+                                {isDeletingNote && deletePopoverId === noteId
+                                  ? "Deleting..."
+                                  : "Yes"}
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

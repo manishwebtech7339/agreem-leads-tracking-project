@@ -93,6 +93,19 @@ export const leadCreate = async (
     const { id: userId } = req.user as { id: number };
 
     // --
+    const validateLead = await db.query.leads.findFirst({
+      where: {
+        email,
+      },
+    });
+    if (validateLead) {
+      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+        success: false,
+        message: "Lead already created for this email",
+      });
+    }
+
+    // --
     await db.insert(leads).values({
       name,
       email,
@@ -116,7 +129,8 @@ export const leadUpdate = async (
 ) => {
   try {
     const { id: leadId } = req.params;
-    const { name, email, status, phone } = req.body as Partial<leadZodSchemaType>;
+    const { name, email, status, phone } =
+      req.body as Partial<leadZodSchemaType>;
 
     // --
     const validateLead = await db.query.leads.findFirst({

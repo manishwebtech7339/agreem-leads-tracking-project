@@ -67,6 +67,7 @@ const leadSchema = new Schema<ILead>(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     phone: {
       type: String,

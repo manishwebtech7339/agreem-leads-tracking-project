@@ -21,7 +21,7 @@ export const users = sqliteTable("users", {
 export const leads = sqliteTable("leads", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text().notNull(),
-  email: text().notNull(),
+  email: text().notNull().unique(),
   phone: text().default(""),
   status: text().notNull(), //  (new, contacted, qualified, lost)
   createdAt: integer("createdAt", { mode: "timestamp" })

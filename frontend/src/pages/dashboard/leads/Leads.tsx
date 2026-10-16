@@ -60,10 +60,10 @@ import { format } from "date-fns";
 const Leads = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const { query, handleSearch } = useDebounce();
-  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<string | number | null>(null);
 
   // Expanded lead rows state (for notes sub-table)
-  const [expandedLeadIds, setExpandedLeadIds] = useState<number[]>([]);
+  const [expandedLeadIds, setExpandedLeadIds] = useState<(string | number)[]>([]);
 
   // Lead Dialog state for Create / Edit
   const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
@@ -75,7 +75,7 @@ const Leads = () => {
   };
 
   // Toggle row expansion for notes sub-table
-  const toggleExpandLead = (id: number) => {
+  const toggleExpandLead = (id: string | number) => {
     setExpandedLeadIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
@@ -133,9 +133,10 @@ const Leads = () => {
   // --
   const onLeadSubmit = async (formData: LeadFormSchemaType) => {
     try {
-      if (selectedLead) {
+      const targetId = selectedLead?.id ?? selectedLead?._id;
+      if (targetId) {
         const res = await updateLead({
-          id: selectedLead.id,
+          id: targetId,
           data: {
             name: formData.name,
             email: formData.email,
@@ -162,7 +163,7 @@ const Leads = () => {
   };
 
   // --
-  const handleDeleteLead = async (id: number) => {
+  const handleDeleteLead = async (id: string | number) => {
     try {
       const res = await deleteLead(id).unwrap();
       toast.success(res.message || "Lead deleted successfully");
@@ -228,10 +229,11 @@ const Leads = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                leadsList.map((lead) => {
-                  const isExpanded = expandedLeadIds.includes(lead.id);
+                leadsList.map((lead, index) => {
+                  const leadId = (lead.id ?? lead._id) as string | number;
+                  const isExpanded = !!leadId && expandedLeadIds.includes(leadId);
                   return (
-                    <Fragment key={lead.id}>
+                    <Fragment key={leadId || index}>
                       <TableRow
                         className={cn(isExpanded && "bg-muted/15 border-b-0")}
                       >
@@ -239,7 +241,7 @@ const Leads = () => {
                           <Button
                             size="icon-xs"
                             variant="ghost"
-                            onClick={() => toggleExpandLead(lead.id)}
+                            onClick={() => leadId && toggleExpandLead(leadId)}
                             title={
                               isExpanded ? "Collapse notes" : "Expand notes"
                             }
@@ -268,14 +270,16 @@ const Leads = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {format(new Date(lead.createdAt), "dd-MM-yyyy")}
+                          {lead.createdAt
+                            ? format(new Date(lead.createdAt), "dd-MM-yyyy")
+                            : "-"}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
                             <Button
                               size={"icon-sm"}
                               variant={isExpanded ? "secondary" : "outline"}
-                              onClick={() => toggleExpandLead(lead.id)}
+                              onClick={() => leadId && toggleExpandLead(leadId)}
                               title={isExpanded ? "Hide Notes" : "View Notes"}
                             >
                               <FileText className="size-4" />
@@ -291,10 +295,10 @@ const Leads = () => {
                               <span className="sr-only">Edit</span>
                             </Button>
                             <Popover
-                              open={openPopoverId === lead.id}
-                              onOpenChange={(open) =>
-                                setOpenPopoverId(open ? lead.id : null)
-                              }
+                              open={Boolean(leadId && openPopoverId === leadId)}
+                              onOpenChange={(open) => {
+                                setOpenPopoverId(open && leadId ? leadId : null);
+                              }}
                             >
                               <PopoverTrigger asChild>
                                 <Button
@@ -323,10 +327,12 @@ const Leads = () => {
                                   <Button
                                     size={"sm"}
                                     variant={"destructive"}
-                                    onClick={() => handleDeleteLead(lead.id)}
+                                    onClick={() =>
+                                      leadId && handleDeleteLead(leadId)
+                                    }
                                     disabled={isDeletingLead}
                                   >
-                                    {isDeletingLead && openPopoverId === lead.id
+                                    {isDeletingLead && openPopoverId === leadId
                                       ? "Deleting..."
                                       : "Yes"}
                                   </Button>
@@ -340,7 +346,7 @@ const Leads = () => {
                       {/* Sub-table row for Notes */}
                       {isExpanded && (
                         <TableRow
-                          key={`${lead.id}-notes-row`}
+                          key={`${leadId}-notes-row`}
                           className="hover:bg-transparent"
                         >
                           <TableCell
