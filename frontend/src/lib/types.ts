@@ -46,3 +46,34 @@ export type UserData = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type User = UserData;
+
+export type LeadStatus = "new" | "contacted" | "qualified" | "lost";
+
+export type LeadData = {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  status: LeadStatus | string;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Lead = LeadData;
+
+export type GetLeadsParams = ApiFilterParams;
+
+export type LeadsApiResponse = PaginatedApiResponse<LeadData[]>;
+
+export type CreateLeadPayload = {
+  name: string;
+  email: string;
+  phone?: string;
+  status?: LeadStatus | string;
+};
+
+export type UpdateLeadPayload = Partial<CreateLeadPayload>;
+

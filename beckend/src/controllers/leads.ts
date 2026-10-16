@@ -19,30 +19,32 @@ export const leadsGet = async (
     const limit = Number(perPage ?? 10);
     const offset = (Number(page) - 1) * limit;
 
-    // --
-    const data = await db.query.leads.findMany({
-      where: query
-        ? {
-            name: `%${query}%`,
-          }
-        : {},
-      limit,
-      offset,
-    });
+    const whereClause = query
+      ? or(like(leads.name, `%${query}%`), like(leads.email, `%${query}%`))
+      : undefined;
+
+    const data = await db
+      .select()
+      .from(leads)
+      .where(whereClause)
+      .limit(limit)
+      .offset(offset);
 
     // Count
-    const totalLeads = await db.$count(
-      leads,
-      or(like(leads.name, `%${query}%`), like(leads.email, `%${query}%`)),
-    );
+    const totalLeads = query
+      ? await db.$count(
+          leads,
+          or(like(leads.name, `%${query}%`), like(leads.email, `%${query}%`)),
+        )
+      : await db.$count(leads);
 
     return apiResHelper(res, HTTP_STATUS.OK, {
       data: data,
       message: "Leads found successfully",
       page: Number(page ?? "1"),
-      perPage: Number(perPage ?? "1"),
+      perPage: limit,
       total: totalLeads,
-      totalPages: Math.ceil(totalLeads / limit),
+      totalPages: Math.ceil(totalLeads / limit) || 1,
     });
   } catch (error) {
     next(error);
@@ -114,7 +116,7 @@ export const leadUpdate = async (
 ) => {
   try {
     const { id: leadId } = req.params;
-    const { name, status, phone } = req.body as leadZodSchemaType;
+    const { name, email, status, phone } = req.body as Partial<leadZodSchemaType>;
 
     // --
     const validateLead = await db.query.leads.findFirst({
@@ -132,14 +134,15 @@ export const leadUpdate = async (
     await db
       .update(leads)
       .set({
-        name,
-        status,
-        phone,
+        ...(name !== undefined ? { name } : {}),
+        ...(email !== undefined ? { email } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(phone !== undefined ? { phone } : {}),
       })
       .where(eq(leads.id, Number(leadId)));
-    return apiResHelper(res, HTTP_STATUS.CREATED, {
+    return apiResHelper(res, HTTP_STATUS.OK, {
       success: true,
-      message: "lead updated successfully",
+      message: "Lead updated successfully",
     });
   } catch (error) {
     next(error);

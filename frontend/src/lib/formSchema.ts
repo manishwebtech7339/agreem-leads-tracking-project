@@ -82,7 +82,7 @@ export const leadFormSchema = z.object({
     .max(100, "Name must be at most 100 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional().or(z.literal("")),
-  status: z.enum(LEAD_STATUS_OPTIONS).default("new"),
+  status: z.enum(LEAD_STATUS_OPTIONS),
 });
 export type LeadFormSchemaType = z.infer<typeof leadFormSchema>;
 
