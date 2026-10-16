@@ -20,7 +20,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { signUpFormSchema, type SignUpFormSchemaType } from "@/lib/formSchema";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import {
   Select,
   SelectContent,
@@ -71,7 +70,7 @@ const SignUp = () => {
       name: "Manish Panchal",
       gender: "male",
       email: "manish@yopmail.com",
-      password: "Password@1234",
+      password: "12345678",
     });
     form.handleSubmit(onSubmit)();
   };
@@ -80,13 +79,6 @@ const SignUp = () => {
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
         <div className="space-y-2">
-          <img
-            src={logo}
-            alt="logo"
-            width={100}
-            height={100}
-            className="mx-auto border"
-          />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Sign Up</CardTitle>
             <CardDescription>

@@ -20,7 +20,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { signInFormSchema, type SignInFormSchemaType } from "@/lib/formSchema";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import { useAppDispatch } from "@/store/store";
 import { setToken } from "@/store/slices/authSlice";
 import type { ApiResponse, SignInData } from "@/lib/types";
@@ -41,13 +40,11 @@ const SignIn = () => {
   // Handle submit
   const onSubmit = async (data: SignInFormSchemaType) => {
     try {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const response = await axios.post<ApiResponse<SignInData>>(
         `${apiBaseUrl}/auth/signin`,
         data,
       );
-      console.log(response, "response");
       if (response.data.success && response.data.data?.token) {
         dispatch(setToken(response.data.data.token));
         toast.success(response.data.message || "Signed in successfully!");
@@ -62,7 +59,7 @@ const SignIn = () => {
 
   // Handle Test account fill up
   const handleTestValues = () => {
-    form.reset({ email: "manish@yopmail.com", password: "Password@1234" });
+    form.reset({ email: "manish@yopmail.com", password: "12345678" });
     form.handleSubmit(onSubmit)();
   };
 
@@ -70,13 +67,6 @@ const SignIn = () => {
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
         <div className="space-y-2">
-          <img
-            src={logo}
-            alt="logo"
-            width={100}
-            height={100}
-            className="mx-auto border"
-          />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Sign In</CardTitle>
             <CardDescription>

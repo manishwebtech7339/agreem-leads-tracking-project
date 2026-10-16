@@ -22,7 +22,6 @@ import {
   type ResetPasswordFormSchemaType,
 } from "@/lib/formSchema";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import type { ApiResponse } from "@/lib/types";
 
 const ResetPassword = () => {
@@ -52,8 +51,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
       const response = await axios.post<ApiResponse>(
         `${apiBaseUrl}/auth/reset-password`,
         {
@@ -77,13 +75,6 @@ const ResetPassword = () => {
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
         <div className="space-y-2">
-          <img
-            src={logo}
-            alt="logo"
-            width={100}
-            height={100}
-            className="mx-auto border"
-          />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Reset Password</CardTitle>
             <CardDescription>Enter your new password below</CardDescription>

@@ -22,7 +22,6 @@ import {
   type VerifyOtpFormSchemaType,
 } from "@/lib/formSchema";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import type { ApiResponse, VerifyOtpData } from "@/lib/types";
 
 const VerifyOtp = () => {
@@ -72,13 +71,6 @@ const VerifyOtp = () => {
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
         <div className="space-y-2">
-          <img
-            src={logo}
-            alt="logo"
-            width={100}
-            height={100}
-            className="mx-auto border"
-          />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Verify OTP</CardTitle>
             <CardDescription>
