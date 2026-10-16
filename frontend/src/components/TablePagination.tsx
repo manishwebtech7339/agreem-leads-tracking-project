@@ -18,8 +18,6 @@ import { Button } from "./ui/button";
 
 type PaginationProps = {
   pageIndex: number;
-  pageSize: number;
-  total: number;
   pageCount: number;
 
   onPageChange: (pageIndex: number) => void;
@@ -31,8 +29,6 @@ type PaginationProps = {
 
 const TablePagination = ({
   pageIndex,
-  pageSize,
-  total,
   pageCount,
   onPageChange,
   nextPage,
@@ -41,9 +37,7 @@ const TablePagination = ({
   lastPage,
 }: PaginationProps) => {
   const totalPages = pageCount;
-  const page = pageIndex + 1;
-  const start = pageSize * pageIndex + 1;
-  const end = Math.min(start + pageSize - 1, total);
+  const page = pageIndex;
 
   return (
     <div className="w-full space-y-2">
@@ -57,7 +51,7 @@ const TablePagination = ({
                   size={"icon-sm"}
                   variant={"outline"}
                   onClick={firstPage}
-                  disabled={page === 1}
+                  disabled={page <= 1}
                   aria-label="First page"
                   title="First page"
                 >
@@ -77,7 +71,7 @@ const TablePagination = ({
                   size={"icon-sm"}
                   variant={"outline"}
                   onClick={previousPage}
-                  disabled={page === 1}
+                  disabled={page <= 1}
                   aria-label="Previous page"
                   title="Previous page"
                 >
@@ -98,7 +92,7 @@ const TablePagination = ({
                   type="button"
                   size={"icon-sm"}
                   variant={page === p ? "default" : "outline"}
-                  onClick={() => onPageChange(p - 1)}
+                  onClick={() => onPageChange(p)}
                 >
                   {p}
                 </Button>
@@ -112,7 +106,7 @@ const TablePagination = ({
                   size={"icon-sm"}
                   variant={"outline"}
                   onClick={nextPage}
-                  disabled={page === totalPages}
+                  disabled={page >= totalPages}
                   aria-label="Next page"
                   title="Next page"
                 >
@@ -132,7 +126,7 @@ const TablePagination = ({
                   size={"icon-sm"}
                   variant={"outline"}
                   onClick={lastPage}
-                  disabled={page === totalPages}
+                  disabled={page >= totalPages}
                   aria-label="Last page"
                   title="Last page"
                 >
@@ -146,13 +140,6 @@ const TablePagination = ({
           </PaginationItem>
         </PaginationContent>
       </Pagination>
-      <p
-        className="text-muted-foreground text-sm whitespace-nowrap text-center"
-        aria-live="polite"
-      >
-        Showing <span>{start}</span> to <span>{end}</span> of{" "}
-        <span>{total}</span>
-      </p>
     </div>
   );
 };

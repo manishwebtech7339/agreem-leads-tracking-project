@@ -3,9 +3,19 @@ export type ApiResponse<T = unknown> = {
   message: string;
   data?: T;
 };
-export type ErrorInstance =
-  | { error: { response: { data: { message: string } } } }
-  | { error: { message: string } };
+
+export type PaginatedApiResponse<T = unknown> = ApiResponse<T> & {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+};
+
+export type ApiFilterParams = {
+  page?: number;
+  perPage?: number;
+  query?: string;
+};
 
 export type AuthUserData = {
   id: number;
@@ -26,4 +36,13 @@ export type ForgotPasswordData = {
 
 export type VerifyOtpData = {
   resetToken: string;
+};
+
+export type UserData = {
+  id: number;
+  name: string;
+  email: string;
+  gender: string;
+  createdAt: string;
+  updatedAt: string;
 };

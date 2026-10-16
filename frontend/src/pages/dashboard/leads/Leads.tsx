@@ -86,7 +86,7 @@ const Leads = () => {
         </div>
         <div className="border-t py-2 sm:py-4">
           <TablePagination
-            pageIndex={0}
+            pageIndex={1}
             pageSize={10}
             total={20}
             pageCount={2}
