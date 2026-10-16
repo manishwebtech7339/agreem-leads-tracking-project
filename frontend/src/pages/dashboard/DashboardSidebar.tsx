@@ -9,10 +9,11 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Home, LogOut, Table2, Users } from "lucide-react";
 import { useAppDispatch } from "@/store/store";
 import { clearAuth } from "@/store/slices/authSlice";
+import { cn } from "cn";
 
 // Routes
 const data = {
@@ -40,6 +41,7 @@ const DashboardSidebar = ({
 }: React.ComponentProps<typeof Sidebar>) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     dispatch(clearAuth());
@@ -62,7 +64,11 @@ const DashboardSidebar = ({
               <SidebarMenuButton asChild>
                 <NavLink
                   to={item.url}
-                  className={"flex items-center justify-between"}
+                  className={cn(
+                    "flex items-center justify-between",
+                    item.url === location.pathname &&
+                      "bg-primary! text-primary-foreground!",
+                  )}
                 >
                   <span>{item.title}</span>
                   {item.icon}
