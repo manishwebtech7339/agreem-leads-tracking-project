@@ -10,7 +10,8 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
