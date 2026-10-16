@@ -27,22 +27,20 @@ export const signUp = async (
       },
     });
     if (checkUserExists) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "User already exists",
       });
     }
 
     // Create a new user in the database
-    await db
-      .insert(users)
-      .values({
-        name,
-        email,
-        gender,
-        password: hashedPassword.password,
-        salt: hashedPassword.salt,
-      });
+    await db.insert(users).values({
+      name,
+      email,
+      gender,
+      password: hashedPassword.password,
+      salt: hashedPassword.salt,
+    });
     return apiResHelper(res, HTTP_STATUS.CREATED, {
       success: true,
       message: "User signed up successfully",
@@ -68,7 +66,7 @@ export const signIn = async (
       },
     });
     if (!checkUserExists) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Invalid credentials",
       });
@@ -82,7 +80,7 @@ export const signIn = async (
     );
 
     if (!isPasswordValid) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Invalid credentials",
       });
@@ -122,7 +120,7 @@ export const forgotPassword = async (
     const { email } = req.body;
 
     if (typeof email !== "string" || !email.trim()) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Email is required",
       });
@@ -135,7 +133,7 @@ export const forgotPassword = async (
     });
 
     if (!user) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "User not found",
       });
@@ -169,14 +167,14 @@ export const verifyOTP = async (
       !email.trim() ||
       !otp
     ) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Email and OTP are required",
       });
     }
 
     if (otp !== STATIC_OTP) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Invalid OTP",
       });
@@ -189,7 +187,7 @@ export const verifyOTP = async (
     });
 
     if (!user) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "User not found",
       });
@@ -227,7 +225,7 @@ export const resetPassword = async (
       typeof newPassword !== "string" ||
       newPassword.length < 8
     ) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message:
           "A reset token and a password of at least 8 characters are required",
@@ -245,7 +243,7 @@ export const resetPassword = async (
 
       decoded = payload;
     } catch {
-      return apiResHelper(res, HTTP_STATUS.UNAUTHORIZED, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Invalid or expired reset token",
       });
@@ -256,7 +254,7 @@ export const resetPassword = async (
       typeof decoded.id !== "number" ||
       typeof decoded.email !== "string"
     ) {
-      return apiResHelper(res, HTTP_STATUS.UNAUTHORIZED, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "Invalid reset token",
       });
@@ -270,7 +268,7 @@ export const resetPassword = async (
     });
 
     if (!user) {
-      return apiResHelper(res, HTTP_STATUS.BAD_REQUEST, {
+      return apiResHelper(res, HTTP_STATUS.OK, {
         success: false,
         message: "User not found",
       });

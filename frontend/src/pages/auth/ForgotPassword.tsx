@@ -1,3 +1,5 @@
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +23,7 @@ import {
 } from "@/lib/formSchema";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import type { ApiResponse, ForgotPasswordData } from "@/lib/types";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -35,16 +38,25 @@ const ForgotPassword = () => {
 
   // Handle submit
   const onSubmit = async (data: ForgotPasswordFormSchemaType) => {
-    console.log(data, "data");
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, 2000);
-    }).then(() => {
-      navigate("/verify-otp", {
-        state: { email: data.email },
-      });
-    });
+    try {
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+      const response = await axios.post<ApiResponse<ForgotPasswordData>>(
+        `${apiBaseUrl}/auth/forgot-password`,
+        { email: data.email },
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message || "OTP generated successfully");
+        navigate("/verify-otp", {
+          state: { email: data.email },
+        });
+      } else {
+        toast.error(response.data.message || "Failed to generate OTP");
+      }
+    } catch {
+      toast.error("Something went wrong!");
+    }
   };
 
   return (
@@ -60,7 +72,10 @@ const ForgotPassword = () => {
           />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Forgot Password</CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>
+              Enter your email address and we'll send you an OTP to reset your
+              password.
+            </CardDescription>
           </CardHeader>
         </div>
         <CardContent>
@@ -91,7 +106,7 @@ const ForgotPassword = () => {
               </Field>
               <Field>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Loading..." : "Submit"}
+                  {form.formState.isSubmitting ? "Sending OTP..." : "Submit"}
                 </Button>
                 <Button
                   type="button"

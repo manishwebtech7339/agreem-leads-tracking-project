@@ -59,11 +59,11 @@ export const resetPasswordFormSchema = z
     resetToken: z.string().min(1, "Reset token is required"),
     newPassword: z
       .string()
-      .min(6, "Password must be at least 6 characters")
+      .min(8, "Password must be at least 8 characters")
       .max(20, "Password must be at most 20 characters"),
     confirmPassword: z
       .string()
-      .min(6, "Password must be at least 6 characters")
+      .min(8, "Password must be at least 8 characters")
       .max(20, "Password must be at most 20 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {

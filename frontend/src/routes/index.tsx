@@ -65,11 +65,11 @@ const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: (
-      <DashboardWrapper>
-        <ProtectRoute>
+      <ProtectRoute>
+        <DashboardWrapper>
           <Outlet /> {/* Passed all children */}
-        </ProtectRoute>
-      </DashboardWrapper>
+        </DashboardWrapper>
+      </ProtectRoute>
     ),
     children: [
       {

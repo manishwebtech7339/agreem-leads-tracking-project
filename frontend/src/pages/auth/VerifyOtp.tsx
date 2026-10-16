@@ -1,3 +1,5 @@
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +23,7 @@ import {
 } from "@/lib/formSchema";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import type { ApiResponse, VerifyOtpData } from "@/lib/types";
 
 const VerifyOtp = () => {
   const navigate = useNavigate();
@@ -39,16 +42,30 @@ const VerifyOtp = () => {
 
   // Handle submit
   const onSubmit = async (data: VerifyOtpFormSchemaType) => {
-    console.log(data, "data");
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, 2000);
-    }).then(() => {
-      navigate("/reset-password", {
-        state: { email: data.email, resetToken: "23434" },
-      });
-    });
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const response = await axios.post<ApiResponse<VerifyOtpData>>(
+        `${apiBaseUrl}/auth/verify-otp`,
+        {
+          email: data.email,
+          otp: data.otp,
+        },
+      );
+
+      if (response.data.success && response.data.data?.resetToken) {
+        toast.success(response.data.message || "OTP verified successfully");
+        navigate("/reset-password", {
+          state: {
+            email: data.email,
+            resetToken: response.data.data.resetToken,
+          },
+        });
+      } else {
+        toast.error(response.data.message || "Failed to verify OTP");
+      }
+    } catch {
+      toast.error("Something went wrong!");
+    }
   };
 
   return (
@@ -63,8 +80,10 @@ const VerifyOtp = () => {
             className="mx-auto border"
           />
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Verify Otp</CardTitle>
-            <CardDescription></CardDescription>
+            <CardTitle className="text-xl">Verify OTP</CardTitle>
+            <CardDescription>
+              Enter the verification code sent to your email
+            </CardDescription>
           </CardHeader>
         </div>
         <CardContent>
@@ -99,14 +118,14 @@ const VerifyOtp = () => {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor="otp">
-                        Otp (Default Testing Otp: 123456)
+                        OTP (Default Testing OTP: 123456)
                       </FieldLabel>
                       <Input
                         {...field}
                         id="otp"
-                        type="otp"
+                        type="text"
                         aria-invalid={fieldState.invalid}
-                        placeholder="******"
+                        placeholder="123456"
                         autoComplete="off"
                       />
                       {fieldState.invalid && (
@@ -119,7 +138,7 @@ const VerifyOtp = () => {
 
               <Field>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Loading..." : "Submit"}
+                  {form.formState.isSubmitting ? "Verifying..." : "Submit"}
                 </Button>
                 <Button
                   type="button"

@@ -1,3 +1,5 @@
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { signUpFormSchema, type SignUpFormSchemaType } from "@/lib/formSchema";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import {
   Select,
@@ -27,8 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ApiResponse } from "@/lib/types";
 
 const SignUp = () => {
+  const navigate = useNavigate();
+
   // Form Config
   const form = useForm<SignUpFormSchemaType>({
     resolver: zodResolver(signUpFormSchema),
@@ -42,12 +47,22 @@ const SignUp = () => {
 
   // Handle submit
   const onSubmit = async (data: SignUpFormSchemaType) => {
-    console.log(data, "data");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, 2000);
-    });
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+      const response = await axios.post<ApiResponse>(
+        `${apiBaseUrl}/auth/signup`,
+        data,
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message || "Account created successfully!");
+        navigate("/sign-in");
+      } else {
+        toast.error(response.data.message || "Failed to sign up");
+      }
+    } catch {
+      toast.error("Something went wrong!");
+    }
   };
 
   // Handle Test account fill up
@@ -60,6 +75,7 @@ const SignUp = () => {
     });
     form.handleSubmit(onSubmit)();
   };
+
   return (
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
@@ -73,7 +89,9 @@ const SignUp = () => {
           />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Sign Up</CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>
+              Create a new account to get started
+            </CardDescription>
           </CardHeader>
         </div>
         <CardContent>
@@ -183,7 +201,9 @@ const SignUp = () => {
               </Field>
               <Field>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Loading..." : "Submit"}
+                  {form.formState.isSubmitting
+                    ? "Creating account..."
+                    : "Submit"}
                 </Button>
                 <Button
                   type="button"

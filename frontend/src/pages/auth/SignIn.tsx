@@ -1,3 +1,5 @@
+import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,9 +21,13 @@ import { Controller, useForm } from "react-hook-form";
 import { signInFormSchema, type SignInFormSchemaType } from "@/lib/formSchema";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { useAppDispatch } from "@/store/store";
+import { setToken } from "@/store/slices/authSlice";
+import type { ApiResponse, SignInData } from "@/lib/types";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   // Form Config
   const form = useForm<SignInFormSchemaType>({
@@ -34,12 +40,24 @@ const SignIn = () => {
 
   // Handle submit
   const onSubmit = async (data: SignInFormSchemaType) => {
-    console.log(data, "data");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, 2000);
-    }).then(() => navigate("/dashboard/home"));
+    try {
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+      const response = await axios.post<ApiResponse<SignInData>>(
+        `${apiBaseUrl}/auth/signin`,
+        data,
+      );
+      console.log(response, "response");
+      if (response.data.success && response.data.data?.token) {
+        dispatch(setToken(response.data.data.token));
+        toast.success(response.data.message || "Signed in successfully!");
+        navigate("/dashboard");
+      } else {
+        toast.error(response.data.message || "Failed to sign in");
+      }
+    } catch {
+      toast.error("Something went wrong!");
+    }
   };
 
   // Handle Test account fill up
@@ -47,6 +65,7 @@ const SignIn = () => {
     form.reset({ email: "manish@yopmail.com", password: "Password@1234" });
     form.handleSubmit(onSubmit)();
   };
+
   return (
     <div className="h-screen w-screen gird place-content-center-safe p-2">
       <Card className="max-w-lg mx-auto">
@@ -60,7 +79,9 @@ const SignIn = () => {
           />
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Sign In</CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
           </CardHeader>
         </div>
         <CardContent>
@@ -122,7 +143,7 @@ const SignIn = () => {
               </Field>
               <Field>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Loading..." : "Submit"}
+                  {form.formState.isSubmitting ? "Signing in..." : "Submit"}
                 </Button>
                 <Button
                   type="button"
