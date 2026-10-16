@@ -12,7 +12,15 @@ export const notesGet = async (
 ) => {
   try {
     const leadId = req.query.leadId as string | undefined;
-    console.log(leadId, "leadId");
+
+    if (!leadId) {
+      return apiResHelper(res, HTTP_STATUS.OK, {
+        success: false,
+        data: [],
+        message: "Lead id is required",
+      });
+    }
+
     const data = await db
       .select()
       .from(notes)

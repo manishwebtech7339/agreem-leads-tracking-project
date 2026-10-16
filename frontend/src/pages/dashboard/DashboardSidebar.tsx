@@ -52,8 +52,8 @@ const DashboardSidebar = ({
     <Sidebar {...props}>
       <SidebarHeader className="border-b">
         <div className="text-center max-h-[46.5px] overflow-hidden">
-          <h1 className="text-xl font-semibold">Lorem Lipsum</h1>
-          <p className="text-sm">Leads Traking</p>
+          <h1 className="text-xl font-semibold">Agreem Tech</h1>
+          <p className="text-sm text-muted-foreground">Leads Traking</p>
         </div>
       </SidebarHeader>
       <SidebarContent>
