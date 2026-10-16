@@ -10,9 +10,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, LogOut, Table2, Users } from "lucide-react";
+import { Home, LogOut, Table2, User, Users } from "lucide-react";
 import { useAppDispatch } from "@/store/store";
 import { clearAuth } from "@/store/slices/authSlice";
+import { useGetCurrentUserQuery } from "@/store/rtk/usersApi";
 import { cn } from "cn";
 
 // Routes
@@ -42,6 +43,10 @@ const DashboardSidebar = ({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { data: currentUserRes, isLoading: isUserLoading } =
+    useGetCurrentUserQuery();
+  const currentUser = currentUserRes?.data;
 
   const handleLogout = () => {
     dispatch(clearAuth());
@@ -78,7 +83,43 @@ const DashboardSidebar = ({
           ))}
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-2">
+      <SidebarFooter className="border-t p-2 space-y-2">
+        {isUserLoading ? (
+          <div className="flex items-center gap-2.5 px-2 py-1.5">
+            <div className="size-8 rounded-full bg-muted animate-pulse shrink-0" />
+            <div className="flex-1 space-y-1.5 min-w-0">
+              <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+              <div className="h-2.5 w-28 rounded bg-muted animate-pulse" />
+            </div>
+          </div>
+        ) : currentUser ? (
+          <div className="flex items-center gap-2.5 rounded-md border border-border/60 bg-sidebar-accent/50 px-2.5 py-2">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold text-xs uppercase shadow-xs">
+              {currentUser.name
+                ? currentUser.name
+                    .split(" ")
+                    .filter(Boolean)
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                : <User className="size-4" />}
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col text-left">
+              <span className="truncate text-xs font-semibold leading-tight text-sidebar-foreground">
+                {currentUser.name}
+              </span>
+              <span className="truncate text-[11px] leading-tight text-muted-foreground">
+                {currentUser.email}
+              </span>
+              {currentUser.gender && (
+                <span className="text-[10px] text-muted-foreground/80 capitalize">
+                  {currentUser.gender}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : null}
+
         <SidebarMenuItem>
           <SidebarMenuButton
             onClick={handleLogout}

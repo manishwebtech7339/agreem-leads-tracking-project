@@ -117,7 +117,9 @@ VITE_API_BASE_URL=http://localhost:4000/api/v1
 
 **Dashboard and Users**
 - `GET /api/v1/dashboard/summary` — Get dashboard statistics.
-- `GET /api/v1/users` — Get users.
+- `GET /api/v1/users` — Get users with search and pagination.
+- `GET /api/v1/users/current-user` — Get current logged-in user details.
+- `DELETE /api/v1/users/:id` — Delete a user (preventing self-deletion).
 
 ## 8. Available Scripts
 

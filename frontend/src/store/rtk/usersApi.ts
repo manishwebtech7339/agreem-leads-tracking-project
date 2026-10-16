@@ -37,8 +37,20 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Users", "Dashboard"],
     }),
+    getCurrentUser: builder.query<ApiResponse<UserData>, void>({
+      query: () => ({
+        url: "/users/current-user",
+        method: "GET",
+      }),
+      providesTags: ["CurrentUser"],
+    }),
   }),
 });
 
-export const { useGetUsersQuery, useGetUserByIdQuery, useDeleteUserMutation } =
-  usersApi;
+export const {
+  useGetUsersQuery,
+  useGetUserByIdQuery,
+  useDeleteUserMutation,
+  useGetCurrentUserQuery,
+} = usersApi;
+

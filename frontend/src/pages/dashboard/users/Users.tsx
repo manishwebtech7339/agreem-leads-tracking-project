@@ -18,12 +18,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useGetUsersQuery, useDeleteUserMutation } from "@/store/rtk/usersApi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  useGetUsersQuery,
+  useDeleteUserMutation,
+  useGetCurrentUserQuery,
+} from "@/store/rtk/usersApi";
 import { format } from "date-fns";
 const Users = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const { query, handleSearch } = useDebounce();
-  const [openPopoverId, setOpenPopoverId] = useState<string | number | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<string | number | null>(
+    null,
+  );
 
   const handleSearchChange = (value: string) => {
     handleSearch(value);
@@ -36,6 +47,10 @@ const Users = () => {
     perPage: 10,
     query,
   });
+  const { data: currentUserData } = useGetCurrentUserQuery();
+  const currentUser = currentUserData?.data;
+  const currentUserId = currentUser?.id ?? currentUser?._id;
+
   const usersList = data?.data ?? [];
   const pageCount = data?.totalPages ?? 1;
 
@@ -57,7 +72,9 @@ const Users = () => {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-medium">User Management</h1>
-        <p className="text-muted-foreground text-sm">Manage users, review details.</p>
+        <p className="text-muted-foreground text-sm">
+          Manage users, review details.
+        </p>
       </div>
       <div className="space-y-4">
         <SearchForm
@@ -98,11 +115,25 @@ const Users = () => {
               ) : (
                 usersList.map((user, index) => {
                   const userId = (user.id ?? user._id) as string | number;
+                  const isCurrentUser = Boolean(
+                    currentUserId && String(userId) === String(currentUserId),
+                  );
                   return (
                     <TableRow key={userId || index}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <span>{user.name}</span>
+                          {isCurrentUser && (
+                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary border border-primary/20">
+                              You
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell className="capitalize">{user.gender}</TableCell>
+                      <TableCell className="capitalize">
+                        {user.gender}
+                      </TableCell>
                       <TableCell>
                         {user.createdAt
                           ? format(new Date(user.createdAt), "dd-MM-yyyy")
@@ -110,50 +141,73 @@ const Users = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Popover
-                            open={Boolean(userId && openPopoverId === userId)}
-                            onOpenChange={(open) =>
-                              setOpenPopoverId(open && userId ? userId : null)
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                size={"icon"}
-                                variant={"destructive"}
-                                disabled={isDeleting}
-                              >
-                                <Trash2 />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-62">
-                              <p className="mb-2 text-sm">
-                                Are you sure you want to delete this user?
-                              </p>
-                              <div className="grid grid-cols-2 gap-2">
+                          {isCurrentUser ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span tabIndex={0} className="inline-block">
+                                  <Button
+                                    size={"icon"}
+                                    variant={"destructive"}
+                                    disabled={true}
+                                    className="opacity-50 cursor-not-allowed"
+                                  >
+                                    <Trash2 />
+                                    <span className="sr-only">
+                                      Cannot delete own account
+                                    </span>
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Can&apos;t delete current session account</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Popover
+                              open={Boolean(userId && openPopoverId === userId)}
+                              onOpenChange={(open) =>
+                                setOpenPopoverId(open && userId ? userId : null)
+                              }
+                            >
+                              <PopoverTrigger asChild>
                                 <Button
-                                  size={"sm"}
-                                  variant={"outline"}
-                                  onClick={() => setOpenPopoverId(null)}
-                                  disabled={isDeleting}
-                                >
-                                  No
-                                </Button>
-                                <Button
-                                  size={"sm"}
+                                  size={"icon"}
                                   variant={"destructive"}
-                                  onClick={() =>
-                                    userId && handleDeleteUser(userId)
-                                  }
                                   disabled={isDeleting}
                                 >
-                                  {isDeleting && openPopoverId === userId
-                                    ? "Deleting..."
-                                    : "Yes"}
+                                  <Trash2 />
+                                  <span className="sr-only">Delete</span>
                                 </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-62">
+                                <p className="mb-2 text-sm">
+                                  Are you sure you want to delete this user?
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Button
+                                    size={"sm"}
+                                    variant={"outline"}
+                                    onClick={() => setOpenPopoverId(null)}
+                                    disabled={isDeleting}
+                                  >
+                                    No
+                                  </Button>
+                                  <Button
+                                    size={"sm"}
+                                    variant={"destructive"}
+                                    onClick={() =>
+                                      userId && handleDeleteUser(userId)
+                                    }
+                                    disabled={isDeleting}
+                                  >
+                                    {isDeleting && openPopoverId === userId
+                                      ? "Deleting..."
+                                      : "Yes"}
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

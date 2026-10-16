@@ -132,3 +132,49 @@ export const userDelete = async (
     next(error);
   }
 };
+
+export const currentUserGet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = req.user as { id?: number | string } | undefined;
+    const userId = user?.id;
+
+    if (!userId) {
+      return apiResHelper(res, HTTP_STATUS.UNAUTHORIZED, {
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const [getUser] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        gender: users.gender,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, Number(userId)))
+      .limit(1);
+
+    if (!getUser) {
+      return apiResHelper(res, HTTP_STATUS.NOT_FOUND, {
+        data: null,
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return apiResHelper(res, HTTP_STATUS.OK, {
+      data: getUser,
+      message: "Current user found successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

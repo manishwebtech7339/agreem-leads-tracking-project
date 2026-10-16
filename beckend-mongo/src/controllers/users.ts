@@ -133,3 +133,38 @@ export const userDelete = async (
     next(error);
   }
 };
+
+export const currentUserGet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = req.user as { id?: string } | undefined;
+    const userId = user?.id;
+
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return apiResHelper(res, HTTP_STATUS.UNAUTHORIZED, {
+        success: false,
+        message: "Current user session not found",
+      });
+    }
+
+    const getUser = await User.findById(userId).select("-password -salt");
+
+    if (!getUser) {
+      return apiResHelper(res, HTTP_STATUS.NOT_FOUND, {
+        data: null,
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return apiResHelper(res, HTTP_STATUS.OK, {
+      data: getUser,
+      message: "Current user found successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
